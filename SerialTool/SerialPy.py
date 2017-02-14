@@ -5,6 +5,7 @@ __author__ = "Tao Yang"
 import serial
 import time
 import sys
+import readline
 
 print ("\r\nA small debug tool for serial port programming.")
 print ("-----------------\r\n")
