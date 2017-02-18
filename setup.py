@@ -7,7 +7,7 @@ with codecs.open('README.rst', encoding='utf-8') as f:
 
 setup(
     name="SerialTool",
-    version="0.0.7",
+    version="0.0.8",
     license='http://www.apache.org/licenses/LICENSE-2.0',
     description='A tool for serial port debug usage',
     author='Tao Yang',
