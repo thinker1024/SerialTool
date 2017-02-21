@@ -17,7 +17,7 @@ setup(
     package_data={
         'SerialTool': ['README.rst', 'LICENSE']
     },
-    install_requires=['pySerial', 'readline'],
+    install_requires=['pySerial'],
     entry_points="""
     [console_scripts]
     SerialTool = SerialTool.SerialPy:main
