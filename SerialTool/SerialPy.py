@@ -116,13 +116,22 @@ def main():
             while ser.inWaiting() > 0 :
                 RecvData += ser.read(1)
             if RecvData != '':
-                if len(sys.argv) > 7 and sys.argv[7] == 'hex':
-                    RecvData = HexShow(RecvData)
-                    print ("<<" + RecvData)
-                elif len(sys.argv) > 7 and sys.argv[7] == 'string':
-                    print ("<<" + RecvData)
+                if sys.argv[1] == '-s':
+                    if len(sys.argv) > 8 and sys.argv[8] == 'hex':
+                        RecvData = HexShow(RecvData)
+                        print ("<<" + RecvData)
+                    elif len(sys.argv) > 8 and sys.argv[8] == 'string':
+                        print ("<<" + RecvData)
+                    else:
+                        print ("<<" + RecvData)
                 else:
-                    print ("<<" + RecvData)
+                    if len(sys.argv) > 7 and sys.argv[7] == 'hex':
+                        RecvData = HexShow(RecvData)
+                        print ("<<" + RecvData)
+                    elif len(sys.argv) > 7 and sys.argv[7] == 'string':
+                        print ("<<" + RecvData)
+                    else:
+                        print ("<<" + RecvData)
 
             InPut = raw_input(">>")
             if InPut == 'exit':
@@ -130,12 +139,20 @@ def main():
                 exit()
             else:
                 #string or hex data InPut
-                if len(sys.argv) > 6 and sys.argv[6] == 'hex':
-                    ser.write(InPut.decode("hex"))
-                elif len(sys.argv) > 6 and sys.argv[6] == 'string':
-                    ser.write(InPut + "\r\n")
+                if sys.argv[1] == '-s':
+                    if len(sys.argv) > 7 and sys.argv[7] == 'hex':
+                        ser.write(InPut.decode("hex"))
+                    elif len(sys.argv) > 7 and sys.argv[7] == 'string':
+                        ser.write(InPut + "\r\n")
+                    else:
+                        ser.write(InPut + "\r\n")
                 else:
-                    ser.write(InPut + "\r\n")
+                    if len(sys.argv) > 6 and sys.argv[6] == 'hex':
+                        ser.write(InPut.decode("hex"))
+                    elif len(sys.argv) > 6 and sys.argv[6] == 'string':
+                        ser.write(InPut + "\r\n")
+                    else:
+                        ser.write(InPut + "\r\n")
     finally:
         ser.close()
         exit()
