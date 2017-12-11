@@ -1,23 +1,32 @@
 # SerialTool
 ## Overview
-A small debug tool for serial port programming.
+A lightweight tool for serial port debugging.
 
 ## How to install
 sudo pip install SerialTool
 
 ## Usage
-**SerailTool -s com baudrate databits parity stopbits types types**
-  1. **-s**: save the current port configuration as default option
-  2. **com**: the serial port device name
-  3. **baudrate**: any standard baudrate, such as 9600, 115200, etc.
-  4. **databits**: 5,6,7,8
-  5. **parity**: N,E
-  6. **stopbits**: 1,1.5,2 
-  7. **types**: Optional, TX data type, string or hex, default is string if this parameter is null.
-  8. **types**: Optional, RX data type, string or hex, default is string if this parameter is null.
+usage: SerialPy.py [-h] [--txtype TXTYPE] [--rxtype RXTYPE] [-s] port baudrate databits parity stopbits
+
+A lightweight tool for serial port debugging.
+
+positional arguments:
+  port             the serial port device name
+  baudrate         the baudrate
+  databits         the number of data bits (5, 6, 7, 8)
+  parity           parity (N, E)
+  stopbits         the number of stop bits (1, 1.5, 2)
+
+options:
+  -h, --help       show this help message and exit
+  --txtype TXTYPE  TX data type (string or hex)
+  --rxtype RXTYPE  RX data type (string or hex)
+  -s, --save       save the current port configuration as the default option
 
 ## Simple Usage Examples
 SerialTool /dev/ttyUSB0 115200 8 N 1
+
+SerialTool /dev/ttyUSB0 115200 8 N 1 --txtype [string/hex] --rxtype [string/hex]
 
 ## Project Main Page
 https://pypi.python.org/pypi/SerialTool

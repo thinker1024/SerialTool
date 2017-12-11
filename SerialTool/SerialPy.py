@@ -1,167 +1,106 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-__author__ = "Tao Yang"
-
+import argparse
 import serial
 import time
-import sys
-import readline
 import os
+import json
 
-print ("\r\nA small debug tool for serial port programming.")
-print ("=========\r\n")
+DEFAULT_CONFIG_FILE = os.path.expanduser("~/.SerialTool.json")
 
-ConfigArgs = {
-            "Port":"/dev/ttyUSB0",
-            "Baudrate":115200,
-            "Databits":8,
-            "Parity":"N",
-            "Stopbits":1,
-            "Txtypes":"string",
-            "Rxtypes":"string"
-        }
+def load_config():
+    parser = argparse.ArgumentParser(description='A lightweight tool for serial port debugging.')
+    parser.add_argument('port', type=str, help='the serial port device name')
+    parser.add_argument('baudrate', type=int, help='the baudrate')
+    parser.add_argument('databits', type=int, help='the number of data bits (5, 6, 7, 8)')
+    parser.add_argument('parity', type=str, help='parity (N, E)')
+    parser.add_argument('stopbits', type=int, help='the number of stop bits (1, 1.5, 2)')
+    parser.add_argument('--txtype', type=str, default='string', help='TX data type (string or hex)')
+    parser.add_argument('--rxtype', type=str, default='string', help='RX data type (string or hex)')
+    parser.add_argument('-s', '--save', action='store_true', help='save the current port configuration as the default option')
+    args = parser.parse_args()
 
-def HexShow(argv):
-    result = ''
-    xLen = len(argv)
-    for i in xrange(xLen):
-        temp = ord(argv[i])
-        hhex = '%02x'%temp
-        result += hhex+''
-    return result
+    # Validate the provided baudrate
+    if args.baudrate <= 0:
+        raise ValueError("Baudrate must be a positive integer.")
 
-def PrintHelp():
-    HelpStr="""
-        usage:
-        SerialTool [-s] com baudrate databits parity stopbits [TX data type] [RX data type]
-        |_-s: save the current port configuration as default option
-        |_com: the serial port device name
-        |_baudrate: any standard baudrate, such as 9600, 115200, etc
-        |_databits: 5,6,7,8
-        |_parity: N,E
-        |_stopbits: 1,1.5,2
-        |_TX data types: string or hex, default is string if this parameter is null
-        |_RX data types: string or hex, default is string if this parameter is null
-        \r\nsimple usage example:
-        ====\r\n
-        SerialTool /dev/ttyUSB0 115200 8 N 1 hex hex
-        \r\nCONTACT
-        ====\r\n
-        Project main page: https://pypi.python.org/pypi/SerialTool
-    """
-    print HelpStr
+    config_args = vars(args)
+    print("Port Info")
+    print("--------")
+    for key, value in config_args.items():
+        print("%s: %s" % (key.capitalize(), value))
+    print("--------")
 
-def LoadConfig():
-    if len(sys.argv) < 6 and os.path.isfile('/.SerialTool.conf') == False:
-        PrintHelp()
-        exit()
-    elif len(sys.argv) > 1 and len(sys.argv) < 6 :
-        PrintHelp()
-        exit()
-    if os.path.isfile('/.SerialTool.conf') and len(sys.argv) == 1:
-        with open('/.SerialTool.conf', 'r') as fp:
-            x = fp.readlines()
-            param = []
-            for lines in x :
-                lines = lines.replace("\r\n","").split(",")
-                param.extend(lines)
-            ConfigArgs["Port"] = param[0]
-            ConfigArgs["Baudrate"] = param[1]
-            ConfigArgs["Databits"] = param[2]
-            ConfigArgs["Parity"] = param[3]
-            ConfigArgs["Stopbits"] = param[4]
-            ConfigArgs["Txtypes"] = param[5]
-            ConfigArgs["Rxtypes"] = param[6]
-    elif sys.argv[1] == '-s' :
-        ConfigArgs["Port"] = sys.argv[2]
-        ConfigArgs["Baudrate"] = sys.argv[3]
-        ConfigArgs["Databits"] = sys.argv[4]
-        ConfigArgs["Parity"] = sys.argv[5]
-        ConfigArgs["Stopbits"] = sys.argv[6]
-        if len(sys.argv) == 7 :
-            ConfigArgs["Txtypes"] = "string"
-            ConfigArgs["Rxtypes"] = "string"
-        if len(sys.argv) == 9 :
-            ConfigArgs["Txtypes"] = sys.argv[7]
-            ConfigArgs["Rxtypes"] = sys.argv[8]
-        with open("/.SerialTool.conf", "w") as fp: 
-            fp.write(ConfigArgs["Port"] + "\r\n")
-            fp.write(ConfigArgs["Baudrate"] + "\r\n")
-            fp.write(ConfigArgs["Databits"] + "\r\n")
-            fp.write(ConfigArgs["Parity"] + "\r\n")
-            fp.write(ConfigArgs["Stopbits"] + "\r\n")
-            fp.write(ConfigArgs["Txtypes"] + "\r\n")
-            fp.write(ConfigArgs["Rxtypes"] + "\r\n")
-    elif len(sys.argv) == 6 :
-        ConfigArgs["Port"] = sys.argv[1]
-        ConfigArgs["Baudrate"] = sys.argv[2]
-        ConfigArgs["Databits"] = sys.argv[3]
-        ConfigArgs["Parity"] = sys.argv[4]
-        ConfigArgs["Stopbits"] = sys.argv[5]
-    elif len(sys.argv) == 8 :
-        ConfigArgs["Port"] = sys.argv[1]
-        ConfigArgs["Baudrate"] = sys.argv[2]
-        ConfigArgs["Databits"] = sys.argv[3]
-        ConfigArgs["Parity"] = sys.argv[4]
-        ConfigArgs["Stopbits"] = sys.argv[5]
-        ConfigArgs["Txtypes"] = sys.argv[6]
-        ConfigArgs["Rxtypes"] = sys.argv[7]
+    if args.save:
+        with open(DEFAULT_CONFIG_FILE, 'w') as fp:
+            json.dump(config_args, fp, indent=4)
 
-    print "Port Info"
-    print "--------"
-    print "Port:" + ConfigArgs["Port"]
-    print "Baudrate:" + ConfigArgs["Baudrate"]
-    print "Databits:" + ConfigArgs["Databits"]
-    print "Parity:" + ConfigArgs["Parity"]
-    print "Stopbits:" + ConfigArgs["Stopbits"]
-    print "Txtypes:" + ConfigArgs["Txtypes"]
-    print "Rxtypes:" + ConfigArgs["Rxtypes"]
-    print "--------"
+    return config_args
+
+def is_hex_string(input_string):
+    try:
+        int(input_string, 16)
+        return True
+    except ValueError:
+        return False
 
 def main():
-    LoadConfig()
-    ser = serial.Serial(
-            port = ConfigArgs["Port"],
-            baudrate = ConfigArgs["Baudrate"],
-            bytesize = int(ConfigArgs["Databits"]),
-            parity = ConfigArgs["Parity"],
-            stopbits = int(ConfigArgs["Stopbits"]),
-            timeout = 0.5,
-            xonxoff = None,
-            rtscts = None,
-            interCharTimeout = None
-            )    
-    print (">>:send")
-    print ("<<:receive")
-    print ("--------\r\n")
-    ser.isOpen()
-
+    global ser
+    ser = None
     try:
-        while 1 :        
-            RecvData = ''
-            time.sleep(1)    
-            while ser.inWaiting() > 0 :
-                RecvData += ser.read(1)
-            if RecvData != '':
-                if ConfigArgs["Rxtypes"] == "hex":
-                    RecvData = HexShow(RecvData)
-                    print ("<<" + RecvData)
-                if ConfigArgs["Rxtypes"] == "string":
-                    print ("<<" + RecvData)
-            InPut = raw_input(">>")
-            if InPut == 'exit':
-                ser.close()
-                exit()
-            else:
-                if ConfigArgs["Txtypes"] == "hex" :
-                    ser.write(InPut.decode("hex"))
-                if ConfigArgs["Txtypes"] == "string" :
-                    ser.write(InPut + "\r\n")
+        config_args = load_config()
+        ser = serial.Serial(
+            port=config_args['port'],
+            baudrate=config_args['baudrate'],
+            bytesize=config_args['databits'],
+            parity=config_args['parity'],
+            stopbits=config_args['stopbits'],
+            timeout=0.5,
+            xonxoff=None,
+            rtscts=None,
+            interCharTimeout=None
+        )
 
+        print(">>:send")
+        print("<<:receive")
+        print("--------\r\n")
+        ser.isOpen()
+
+        while True:
+            recv_data = b''
+            time.sleep(1)
+            while ser.inWaiting() > 0:
+                recv_data += ser.read(1)
+            if recv_data:
+                if config_args['rxtype'] == "hex":
+                    recv_data = ''.join(['%02x' % byte for byte in recv_data])
+                    print("<<" + recv_data)
+                if config_args['rxtype'] == "string":
+                    print("<<" + recv_data.decode('utf-8'))
+            user_input = input(">>")
+            if user_input == 'exit':
+                ser.close()
+                break
+            else:
+                if config_args['txtype'] == "hex":
+                    try:
+                        if is_hex_string(user_input):
+                            ser.write(bytes.fromhex(user_input))
+                        else:
+                            print("Invalid hex input. Please enter a valid hex string.")
+                    except ValueError:
+                        print("Invalid hex input. Please enter a valid hex string.")
+                else:
+                    ser.write((user_input + "\n").encode('utf-8'))
+
+    except KeyboardInterrupt:
+        print("\nKeyboardInterrupt: Exiting the program.")
+    except serial.SerialException as e:
+        print(f"Serial Port Error: {e}")
     finally:
-        ser.close()
-        exit()
+        if ser:
+            ser.close()
 
 if __name__ == '__main__':
     main()
